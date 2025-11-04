@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SASE Caxias - BI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            color: white;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+        
+        .sidebar h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #1e3a5f;
+            border-bottom: 2px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .filter-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .filter-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #e55a24;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+        
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #ff6b35;
+        }
+        
+        .kpi-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3a5f;
+            margin: 10px 0;
+        }
+        
+        .kpi-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e3a5f;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        .modalidade-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .modalidade-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 3px solid #ff6b35;
+        }
+        
+        .modalidade-card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #1e3a5f;
+        }
+        
+        .modalidade-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        
+        .modalidade-stat span:first-child {
+            color: #999;
+        }
+        
+        .modalidade-stat span:last-child {
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+        
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e3a5f;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            background: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Dashboard SASE Caxias</h1>
+        <p>Análise Completa de Exames Médicos - Última atualização: 2025-11-04 21:30:31</p>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <h3>🔍 Filtros</h3>
+            
+            <div class="filter-group">
+                <label>Convênio</label>
+                <select id="filterConvenio" onchange="aplicarFiltros()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Modalidade</label>
+                <div id="filterModalidade"></div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Período</label>
+                <select id="filterMes" onchange="aplicarFiltros()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="limparFiltros()">🔄 Limpar Filtros</button>
+        </div>
+        
+        <div class="main-content">
+            <!-- KPIs -->
+            <div class="kpi-container">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total de Exames</div>
+                    <div class="kpi-value" id="kpiExames">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Receita Bruta</div>
+                    <div class="kpi-value" id="kpiReceitaBruta">R$ 0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Receita Líquida</div>
+                    <div class="kpi-value" id="kpiReceitaLiquida">R$ 0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">% de Lucro</div>
+                    <div class="kpi-value" id="kpiLucro">0%</div>
+                </div>
+            </div>
+            
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Exames por Mês</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartExamesMes"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">💰 Distribuição por Convênio</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartConvenio"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">🏥 Distribuição por Modalidade</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartModalidade"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📊 Quantidade por Modalidade</div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartModalidadeQtd"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cards por Modalidade -->
+            <div class="modalidade-cards" id="modalidadeCards"></div>
+            
+            <!-- Tabela Detalhada -->
+            <div class="table-container">
+                <div class="table-title">📋 Detalhamento por Mês, Convênio e Modalidade</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Convênio</th>
+                            <th>Modalidade</th>
+                            <th>Quantidade</th>
+                            <th>Receita Bruta</th>
+                            <th>Receita Líquida</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="footer">
+            <p>✅ Dashboard atualizado automaticamente | Dados processados de forma segura</p>
+        </div>
+    </div>
+    
+    <script>
+        // Dados embutidos
+        const allData = {'exames_mes_convenio_modalidade': [{'Mes': '2024-07', 'Convenio': 'CORTESIA', 'Modalidade': 'Mamografia', 'Qtd': 3, 'Receita_Bruta': 0.0, 'Receita_Liquida': 0.0}, {'Mes': '2024-07', 'Convenio': 'Cartão de Crédito', 'Modalidade': 'Densitometria', 'Qtd': 37, 'Receita_Bruta': 3604.0, 'Receita_Liquida': 2093.924}, {'Mes': '2024-07', 'Convenio': 'Cartão de Crédito', 'Modalidade': 'Mamografia', 'Qtd': 71, 'Receita_Bruta': 8165.0, 'Receita_Liquida': 5560.365}, {'Mes': '2024-07', 'Convenio': 'Cartão de Crédito', 'Modalidade': 'Ultrassonografia', 'Qtd': 236, 'Receita_Bruta': 22420.0, 'Receita_Liquida': 8542.02}, {'Mes': '2024-07', 'Convenio': 'Cartão de Débito', 'Modalidade': 'Densitometria', 'Qtd': 29, 'Receita_Bruta': 2628.0, 'Receita_Liquida': 1576.8}, {'Mes': '2024-07', 'Convenio': 'Cartão de Débito', 'Modalidade': 'Doppler', 'Qtd': 1, 'Receita_Bruta': 165.0, 'Receita_Liquida': 99.0}, {'Mes': '2024-07', 'Convenio': 'Cartão de Débito', 'Modalidade': 'Mamografia', 'Qtd': 60, 'Receita_Bruta': 6900.0, 'Receita_Liquida': 4830.0}, {'Mes': '2024-07', 'Convenio': 'Cartão de Débito', 'Modalidade': 'Ultrassonografia', 'Qtd': 291, 'Receita_Bruta': 27084.12, 'Receita_Liquida': 10833.648}, {'Mes': '2024-07', 'Convenio': 'SASE', 'Modalidade': 'Densitometria', 'Qtd': 85, 'Receita_Bruta': 8224.0, 'Receita_Liquida': 4934.4}, {'Mes': '2024-07', 'Convenio': 'SASE', 'Modalidade': 'Mamografia', 'Qtd': 68, 'Receita_Bruta': 7820.0, 'Receita_Liquida': 5474.0}, {'Mes': '2024-07', 'Convenio': 'SASE', 'Modalidade': 'Ultrassonografia', 'Qtd': 416, 'Receita_Bruta': 37975.0, 'Receita_Liquida': 15190.0}, {'Mes': '2024-07', 'Convenio': 'SUS', 'Modalidade': 'Densitometria', 'Qtd': 44, 'Receita_Bruta': 2404.0, 'Receita_Liquida': 1442.4}, {'Mes': '2024-07', 'Convenio': 'SUS', 'Modalidade': 'Ultrassonografia', 'Qtd': 170, 'Receita_Bruta': 1254.48, 'Receita_Liquida': 501.792}], 'resumo_mensal': [{'Mes': '2024-07', 'Qtd_Exames': 1511, 'Receita_Bruta': 128643.6, 'Receita_Liquida': 61078.349, 'Percentual_Lucro': 47.48}, {'Mes': 'NaT', 'Qtd_Exames': 0, 'Receita_Bruta': 128643.6, 'Receita_Liquida': 61078.349, 'Percentual_Lucro': 47.48}], 'dist_convenio': [{'Convenio': 'SASE', 'Qtd': 569, 'Receita_Bruta': 54019.0, 'Receita_Liquida': 25598.4, 'Percentual': 37.66}, {'Convenio': 'Cartão de Débito', 'Qtd': 381, 'Receita_Bruta': 36777.12, 'Receita_Liquida': 17339.448, 'Percentual': 25.22}, {'Convenio': 'Cartão de Crédito', 'Qtd': 344, 'Receita_Bruta': 34189.0, 'Receita_Liquida': 16196.309, 'Percentual': 22.77}, {'Convenio': 'SUS', 'Qtd': 214, 'Receita_Bruta': 3658.48, 'Receita_Liquida': 1944.192, 'Percentual': 14.16}, {'Convenio': 'CORTESIA', 'Qtd': 3, 'Receita_Bruta': 0.0, 'Receita_Liquida': 0.0, 'Percentual': 0.2}], 'dist_modalidade': [{'Modalidade': 'Ultrassonografia', 'Qtd': 1113, 'Receita_Bruta': 88733.6, 'Receita_Liquida': 35067.46, 'Percentual': 73.66}, {'Modalidade': 'Mamografia', 'Qtd': 202, 'Receita_Bruta': 22885.0, 'Receita_Liquida': 15864.365, 'Percentual': 13.37}, {'Modalidade': 'Densitometria', 'Qtd': 195, 'Receita_Bruta': 16860.0, 'Receita_Liquida': 10047.524, 'Percentual': 12.91}, {'Modalidade': 'Doppler', 'Qtd': 1, 'Receita_Bruta': 165.0, 'Receita_Liquida': 99.0, 'Percentual': 0.07}, {'Modalidade': 'Outros', 'Qtd': 0, 'Receita_Bruta': 128643.6, 'Receita_Liquida': 61078.349, 'Percentual': 0.0}], 'dist_modalidade_mes': [{'Mes': '2024-07', 'Modalidade': 'Densitometria', 'Qtd': 195}, {'Mes': '2024-07', 'Modalidade': 'Doppler', 'Qtd': 1}, {'Mes': '2024-07', 'Modalidade': 'Mamografia', 'Qtd': 202}, {'Mes': '2024-07', 'Modalidade': 'Ultrassonografia', 'Qtd': 1113}, {'Mes': 'NaT', 'Modalidade': 'Outros', 'Qtd': 0}], 'ultima_atualizacao': '2025-11-04 21:30:31'};
+        let filteredData = JSON.parse(JSON.stringify(allData));
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            preencherFiltros();
+            atualizarDashboard();
+        });
+        
+        function preencherFiltros() {
+            // Convênios
+            const convenios = [...new Set(allData.exames_mes_convenio_modalidade.map(x => x.Convenio))];
+            const selectConvenio = document.getElementById('filterConvenio');
+            convenios.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c;
+                option.textContent = c;
+                selectConvenio.appendChild(option);
+            });
+            
+            // Modalidades
+            const modalidades = [...new Set(allData.dist_modalidade.map(x => x.Modalidade))];
+            const filterModalidade = document.getElementById('filterModalidade');
+            modalidades.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = m;
+                checkbox.onchange = aplicarFiltros;
+                const label = document.createElement('label');
+                label.style.marginBottom = '0';
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(m));
+                div.appendChild(label);
+                filterModalidade.appendChild(div);
+            });
+            
+            // Períodos
+            const periodos = [...new Set(allData.resumo_mensal.map(x => x.Mes))];
+            const selectMes = document.getElementById('filterMes');
+            periodos.forEach(p => {
+                if (p) {
+                    const option = document.createElement('option');
+                    option.value = p;
+                    option.textContent = p;
+                    selectMes.appendChild(option);
+                }
+            });
+        }
+        
+        function aplicarFiltros() {
+            const convenio = document.getElementById('filterConvenio').value;
+            const mes = document.getElementById('filterMes').value;
+            const modalidades = [];
+            document.querySelectorAll('#filterModalidade input[type="checkbox"]:checked').forEach(cb => {
+                modalidades.push(cb.value);
+            });
+            
+            filteredData = JSON.parse(JSON.stringify(allData));
+            
+            if (convenio) {
+                filteredData.exames_mes_convenio_modalidade = filteredData.exames_mes_convenio_modalidade.filter(x => x.Convenio === convenio);
+            }
+            
+            if (mes) {
+                filteredData.exames_mes_convenio_modalidade = filteredData.exames_mes_convenio_modalidade.filter(x => x.Mes === mes);
+            }
+            
+            if (modalidades.length > 0) {
+                filteredData.exames_mes_convenio_modalidade = filteredData.exames_mes_convenio_modalidade.filter(x => modalidades.includes(x.Modalidade));
+            }
+            
+            atualizarDashboard();
+        }
+        
+        function limparFiltros() {
+            document.getElementById('filterConvenio').value = '';
+            document.getElementById('filterMes').value = '';
+            document.querySelectorAll('#filterModalidade input[type="checkbox"]').forEach(cb => cb.checked = false);
+            filteredData = JSON.parse(JSON.stringify(allData));
+            atualizarDashboard();
+        }
+        
+        function atualizarDashboard() {
+            atualizarKPIs();
+            atualizarGraficos();
+            atualizarTabela();
+            atualizarCards();
+        }
+        
+        function atualizarKPIs() {
+            const dados = filteredData.exames_mes_convenio_modalidade;
+            const qtd = dados.reduce((sum, x) => sum + x.Qtd, 0);
+            const bruta = dados.reduce((sum, x) => sum + x.Receita_Bruta, 0);
+            const liquida = dados.reduce((sum, x) => sum + x.Receita_Liquida, 0);
+            const lucro = bruta > 0 ? ((liquida / bruta) * 100).toFixed(2) : 0;
+            
+            document.getElementById('kpiExames').textContent = qtd.toLocaleString('pt-BR');
+            document.getElementById('kpiReceitaBruta').textContent = 'R$ ' + bruta.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+            document.getElementById('kpiReceitaLiquida').textContent = 'R$ ' + liquida.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+            document.getElementById('kpiLucro').textContent = lucro + '%';
+        }
+        
+        function atualizarGraficos() {
+            // Gráfico de exames por mês
+            const examesPosMes = {};
+            filteredData.exames_mes_convenio_modalidade.forEach(x => {
+                examesPosMes[x.Mes] = (examesPosMes[x.Mes] || 0) + x.Qtd;
+            });
+            
+            const ctxMes = document.getElementById('chartExamesMes').getContext('2d');
+            if (window.chartMes) window.chartMes.destroy();
+            window.chartMes = new Chart(ctxMes, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(examesPosMes),
+                    datasets: [{
+                        label: 'Exames',
+                        data: Object.values(examesPosMes),
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}
+            });
+            
+            // Gráfico de convênio
+            const ctxConvenio = document.getElementById('chartConvenio').getContext('2d');
+            if (window.chartConvenio) window.chartConvenio.destroy();
+            const convenioDados = allData.dist_convenio.filter(x => x.Convenio !== 'CORTESIA');
+            window.chartConvenio = new Chart(ctxConvenio, {
+                type: 'bar',
+                data: {
+                    labels: convenioDados.map(x => x.Convenio),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: convenioDados.map(x => x.Qtd),
+                        backgroundColor: '#1e3a5f'
+                    }]
+                },
+                options: {indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}
+            });
+            
+            // Gráfico de modalidade (pizza)
+            const ctxModalidade = document.getElementById('chartModalidade').getContext('2d');
+            if (window.chartModalidade) window.chartModalidade.destroy();
+            const modalidadeDados = allData.dist_modalidade.filter(x => x.Modalidade !== 'Outros');
+            window.chartModalidade = new Chart(ctxModalidade, {
+                type: 'doughnut',
+                data: {
+                    labels: modalidadeDados.map(x => x.Modalidade),
+                    datasets: [{
+                        data: modalidadeDados.map(x => x.Qtd),
+                        backgroundColor: ['#1e3a5f', '#ff6b35', '#2c5282', '#e55a24']
+                    }]
+                },
+                options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}}
+            });
+            
+            // Gráfico de modalidade (barras)
+            const ctxModalidadeQtd = document.getElementById('chartModalidadeQtd').getContext('2d');
+            if (window.chartModalidadeQtd) window.chartModalidadeQtd.destroy();
+            window.chartModalidadeQtd = new Chart(ctxModalidadeQtd, {
+                type: 'bar',
+                data: {
+                    labels: modalidadeDados.map(x => x.Modalidade),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: modalidadeDados.map(x => x.Qtd),
+                        backgroundColor: '#ff6b35'
+                    }]
+                },
+                options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}
+            });
+        }
+        
+        function atualizarTabela() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            filteredData.exames_mes_convenio_modalidade.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.Mes}</td>
+                    <td>${row.Convenio}</td>
+                    <td>${row.Modalidade}</td>
+                    <td>${row.Qtd}</td>
+                    <td>R$ ${row.Receita_Bruta.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</td>
+                    <td>R$ ${row.Receita_Liquida.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function atualizarCards() {
+            const container = document.getElementById('modalidadeCards');
+            container.innerHTML = '';
+            allData.dist_modalidade.filter(x => x.Modalidade !== 'Outros').forEach(mod => {
+                const card = document.createElement('div');
+                card.className = 'modalidade-card';
+                card.innerHTML = `
+                    <h3>${mod.Modalidade}</h3>
+                    <div class="modalidade-stat">
+                        <span>Quantidade:</span>
+                        <span>${mod.Qtd}</span>
+                    </div>
+                    <div class="modalidade-stat">
+                        <span>Receita Bruta:</span>
+                        <span>R$ ${mod.Receita_Bruta.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div class="modalidade-stat">
+                        <span>Receita Líquida:</span>
+                        <span>R$ ${mod.Receita_Liquida.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
