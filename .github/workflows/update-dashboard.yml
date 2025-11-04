@@ -1,0 +1,53 @@
+name: Atualizar Dashboard SASE
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 23h Rio de Janeiro (02:00 UTC)
+  workflow_dispatch:  # Permite rodar manualmente
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Clonar o repositório
+      - name: 📥 Clonar repositório
+        uses: actions/checkout@v3
+      
+      # Step 2: Configurar Python
+      - name: 🐍 Configurar Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      # Step 3: Instalar dependências
+      - name: 📦 Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl google-auth-oauthlib google-auth-httplib2 google-api-python-client requests
+      
+      # Step 4: Executar script de atualização
+      - name: 🔄 Executar script de atualização
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        run: python scripts/update.py
+      
+      # Step 5: Commit das mudanças
+      - name: 💾 Commit e Push das mudanças
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add dashboard.html
+          git commit -m "🤖 Dashboard atualizado automaticamente - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+          git push
+      
+      # Step 6: Notificar sucesso
+      - name: ✅ Notificação de Sucesso
+        if: success()
+        run: echo "Dashboard atualizado com sucesso às $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+      
+      # Step 7: Notificar erro
+      - name: ❌ Notificação de Erro
+        if: failure()
+        run: echo "Erro na atualização do dashboard. Verifique os logs."
