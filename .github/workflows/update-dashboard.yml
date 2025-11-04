@@ -33,14 +33,16 @@ jobs:
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: python scripts/update.py
       
-      # Step 5: Commit das mudanças
+      # Step 5: Commit e Push das mudanças com token pessoal
       - name: 💾 Commit e Push das mudanças
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add dashboard.html
           git commit -m "🤖 Dashboard atualizado automaticamente - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
-          git push
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} HEAD:main
       
       # Step 6: Notificar sucesso
       - name: ✅ Notificação de Sucesso
